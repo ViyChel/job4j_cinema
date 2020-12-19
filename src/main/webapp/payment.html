@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+    <link rel="shortcut icon" type="image/png" href="favicon.ico"/>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -22,13 +22,85 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+<script>
+    let selectedRow = '';
+    let selectedPlace = '';
+    parseGet();
+    printInfo();
+
+    function parseGet() {
+        let a = window.location.search;
+        a = a.substring(1).split("&");
+        selectedRow = a[0].substring(a[0].indexOf('=') + 1);
+        selectedPlace = a[1].substring(a[1].indexOf('=') + 1);
+
+    }
+
+    function printInfo() {
+        getPrice(selectedRow, selectedPlace, function (price) {
+            let infoClient = "<h3>Вы выбрали ряд " + selectedRow + " место " + selectedPlace + " , Сумма : " + price + " рублей.</h3>";
+            $('#infoClient').append(infoClient);
+        })
+    }
+
+    function getPrice(row, place, fn) {
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8080/cinema/place.do',
+            data: {
+                row: row,
+                place: place
+            }
+        }).done(function (data) {
+            fn(data);
+        }).fail(function () {
+            alert('An error occurred while sending!');
+        })
+    }
+
+    function payTicket() {
+        if (validate()) {
+            send();
+        }
+    }
+
+    function validate() {
+        let name = $('#username').val();
+        let phone = $('#phone').val();
+        if (name === '' || phone === '') {
+            alert('Заполните все поля!');
+            return false;
+        }
+        return true;
+    }
+
+    function send() {
+        let username = $('#username').val();
+        let phone = $('#phone').val();
+        let order = {
+            name: username,
+            phone: phone,
+            row: selectedRow,
+            place: selectedPlace
+
+        };
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8080/cinema/buy.do',
+            data: JSON.stringify(order),
+            contentType: 'JSON'
+        }).done(function () {
+            window.location.href = 'http://localhost:8080/cinema/';
+        }).fail(function () {
+            alert('An error occurred while sending!');
+        })
+    }
+</script>
 
 <div class="container">
-    <div class="row pt-3">
-        <h3>
-            Вы выбрали ряд 1 место 1, Сумма : 500 рублей.
-        </h3>
-    </div>
+    <div class="row pt-3" id="infoClient"></div>
     <div class="row">
         <form>
             <div class="form-group">
@@ -39,9 +111,10 @@
                 <label for="phone">Номер телефона</label>
                 <input type="text" class="form-control" id="phone" placeholder="Номер телефона">
             </div>
-            <button type="button" class="btn btn-success">Оплатить</button>
+            <button type="button" class="btn btn-success" onclick="payTicket()">Оплатить</button>
         </form>
     </div>
 </div>
 </body>
+
 </html>

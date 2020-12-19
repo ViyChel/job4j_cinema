@@ -3,24 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+    <link rel="shortcut icon" type="image/png" href="favicon.ico"/>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-
     <title>Cinema</title>
 </head>
 <body>
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+<script>
+    (() => setTimeout(printPlaces, 0))();
+
+    (() => setInterval(printPlaces, 10000))();
+
+    function printPlaces() {
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8080/cinema/place.do',
+            dataType: 'JSON',
+        }).done(function (data) {
+            let testData = $('#places').after().html('');
+            let c_row = 0;
+            let text = '';
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].row === c_row) {
+                    printInput(i, data);
+                } else {
+                    c_row = data[i].row;
+                    text = '<tr><th>' + c_row + '</th>';
+                    printInput(i, data);
+                    if (data.length === data.length - 1 || data[i + 1].row !== c_row) {
+                        text += '</tr>';
+                    }
+                }
+
+                function checkNextRow(i, data) {
+                    if (i + 1 === data.length || data[i + 1].row !== c_row) {
+                        text += '</tr>';
+                        testData.append(text);
+                    }
+                }
+
+                function printInput(i, data) {
+                    if (data[i].status === false) {
+                        text += '<td class="bg-warning" >Билет куплен</td>';
+                        checkNextRow(i, data);
+                    } else {
+                        text += '<td><input type="radio" name="place" value="' + c_row + '_' + data[i].place + '"> Ряд ' + c_row + ', Место ' + data[i].place + '</td>';
+                        checkNextRow(i, data);
+                    }
+                }
+            }
+        }).fail(function (err) {
+            alert('An error occurred while sending!');
+        })
+    }
+
+    function buyTicket() {
+        let places = document.getElementsByName('place');
+        let txt = "";
+        for (let i = 0; i < places.length; i++) {
+            if (places[i].checked) {
+                txt = txt + places[i].value + " ";
+            }
+        }
+        if (txt === "") {
+            alert('Выберите место!');
+        } else {
+            txt = txt.split('_');
+            selectedRow = txt[0];
+            selectedPlace = txt[1];
+            window.location.href = "./payment.html?row=" + selectedRow + "&place=" + selectedPlace;
+        }
+    }
+</script>
 
 <div class="container">
     <div class="row pt-3">
         <h4>
-            Бронирование месте на сеанс
+            Бронирование места на сеанс
         </h4>
         <table class="table table-bordered">
             <thead>
@@ -31,30 +104,11 @@
                 <th>3</th>
             </tr>
             </thead>
-            <tbody>
-            <tr>
-                <th>1</th>
-                <td><input type="radio" name="place" value="11"> Ряд 1, Место 1</td>
-                <td><input type="radio" name="place" value="11"> Ряд 1, Место 1</td>
-                <td><input type="radio" name="place" value="11"> Ряд 1, Место 1</td>
-            </tr>
-            <tr>
-                <th>2</th>
-                <td><input type="radio" name="place" value="11"> Ряд 2, Место 1</td>
-                <td><input type="radio" name="place" value="11"> Ряд 2, Место 1</td>
-                <td><input type="radio" name="place" value="11"> Ряд 2, Место 1</td>
-            </tr>
-            <tr>
-                <th>3</th>
-                <td><input type="radio" name="place" value="11"> Ряд 3, Место 1</td>
-                <td><input type="radio" name="place" value="11"> Ряд 3, Место 1</td>
-                <td><input type="radio" name="place" value="11"> Ряд 3, Место 1</td>
-            </tr>
-            </tbody>
+            <tbody id="places"></tbody>
         </table>
     </div>
     <div class="row float-right">
-        <button type="button" class="btn btn-success">Оплатить</button>
+        <button type="button" class="btn btn-success" onclick="buyTicket()">Оплатить</button>
     </div>
 </div>
 </body>
